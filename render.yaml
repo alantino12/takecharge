@@ -3,17 +3,27 @@ services:
     name: takecharge-backend
     env: node
     buildCommand: |
-      echo "Installing dependencies..."
+      pwd
+      ls -la
+      echo "Installing root dependencies..."
       npm install
       echo "Building frontend..."
-      cd frontend && npm install && npm run build
+      cd frontend
+      pwd
+      ls -la
+      npm install
+      npm run build
       echo "Installing backend dependencies..."
-      cd ../backend && npm install
+      cd ../backend
+      pwd
+      ls -la
+      npm install
       echo "Creating public directory..."
       mkdir -p public
       echo "Copying frontend build files..."
       cp -r ../frontend/dist/* public/
       echo "Build completed successfully"
+      ls -la public
     startCommand: cd backend && node server.js
     envVars:
       - key: MONGODB_URI
