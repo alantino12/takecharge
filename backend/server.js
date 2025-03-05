@@ -136,10 +136,18 @@ if (process.env.NODE_ENV === 'production') {
   if (!require('fs').existsSync(publicPath)) {
     console.error('Public directory does not exist:', publicPath);
     console.error('Please ensure the build process completed successfully');
+    console.error('Current directory:', process.cwd());
+    console.error('Directory contents:', require('fs').readdirSync(__dirname));
     process.exit(1);
   }
   
-  console.log('Directory contents:', require('fs').readdirSync(publicPath));
+  const files = require('fs').readdirSync(publicPath);
+  console.log('Public directory contents:', files);
+  
+  if (files.length === 0) {
+    console.error('Public directory is empty');
+    process.exit(1);
+  }
   
   // Serve static files from the public directory
   app.use(express.static(publicPath));
@@ -149,6 +157,7 @@ if (process.env.NODE_ENV === 'production') {
     const indexPath = path.join(publicPath, 'index.html');
     if (!require('fs').existsSync(indexPath)) {
       console.error('index.html not found at:', indexPath);
+      console.error('Available files:', require('fs').readdirSync(publicPath));
       return res.status(404).send('Frontend build files not found');
     }
     res.sendFile(indexPath);
