@@ -3,7 +3,8 @@ services:
     name: takecharge-backend
     env: node
     nodeVersion: 18.17.0
-    buildCommand: |
+    buildCommand: npm install
+    startCommand: |
       echo "Starting build process..."
       echo "Current directory: $(pwd)"
       echo "Directory contents:"
@@ -30,7 +31,9 @@ services:
       cp -r ../frontend/dist/* public/
       echo "Public directory contents after copy:"
       ls -la public
-    startCommand: cd backend && node server.js
+      
+      echo "Starting server..."
+      node server.js
     envVars:
       - key: MONGODB_URI
         sync: false

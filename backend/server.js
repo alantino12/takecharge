@@ -11,6 +11,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Debug information
+console.log('Server starting...');
+console.log('Current working directory:', process.cwd());
+console.log('__dirname:', __dirname);
+console.log('Directory contents:', fs.readdirSync(__dirname));
+
 // MongoDB Connection with detailed error handling
 const connectDB = async () => {
   try {
@@ -122,11 +128,17 @@ app.delete('/api/posts/:id', authenticateAdmin, async (req, res) => {
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   const publicPath = path.join(__dirname, 'public');
+  console.log('Public directory path:', publicPath);
+  console.log('Public directory exists:', fs.existsSync(publicPath));
   
   // Create public directory if it doesn't exist
   if (!fs.existsSync(publicPath)) {
+    console.log('Creating public directory...');
     fs.mkdirSync(publicPath, { recursive: true });
   }
+
+  // Log public directory contents
+  console.log('Public directory contents:', fs.readdirSync(publicPath));
 
   // Serve static files from the public directory
   app.use(express.static(publicPath));
@@ -134,9 +146,13 @@ if (process.env.NODE_ENV === 'production') {
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
+    console.log('Looking for index.html at:', indexPath);
+    console.log('index.html exists:', fs.existsSync(indexPath));
+    
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
+      console.log('Available files in public directory:', fs.readdirSync(publicPath));
       res.status(404).send('Frontend files not found. Please ensure the build process completed successfully.');
     }
   });
