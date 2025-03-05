@@ -1,25 +1,34 @@
 #!/bin/bash
 
 echo "Starting build process..."
+echo "Current directory: $(pwd)"
+echo "Directory contents:"
+ls -la
 
-# Install frontend dependencies and build
+echo "Installing root dependencies..."
+npm install
+
 echo "Building frontend..."
 cd frontend
+echo "Frontend directory: $(pwd)"
+echo "Frontend contents:"
+ls -la
 npm install
 npm run build
 
-# Install backend dependencies
-echo "Building backend..."
+echo "Installing backend dependencies..."
 cd ../backend
+echo "Backend directory: $(pwd)"
+echo "Backend contents:"
+ls -la
 npm install
 
-# Create public directory and copy frontend build
-echo "Copying frontend build..."
+echo "Creating public directory..."
 mkdir -p public
+
+echo "Copying frontend build files..."
 cp -r ../frontend/dist/* public/
 
-# List contents to verify
-echo "Verifying build..."
-ls -la public/
-
-echo "Build complete!" 
+echo "Build completed successfully"
+echo "Public directory contents:"
+ls -la public 
