@@ -28,9 +28,11 @@ if (process.env.NODE_ENV === 'production') {
       execSync('npm install', { stdio: 'inherit' });
     }
     
-    // Build frontend
+    // Build frontend using local vite installation
     console.log('Building frontend...');
-    execSync('npm run build', { stdio: 'inherit' });
+    const vitePath = path.join(process.cwd(), 'node_modules', '.bin', 'vite');
+    console.log('Using Vite from:', vitePath);
+    execSync(`node ${vitePath} build`, { stdio: 'inherit' });
     
     // Go back to backend directory
     process.chdir(path.join(__dirname));

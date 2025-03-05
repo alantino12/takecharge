@@ -9,6 +9,8 @@ services:
       npm install
       echo "Installing frontend dependencies..."
       cd frontend && npm install
+      echo "Building frontend..."
+      npm run build
       echo "Installing backend dependencies..."
       cd ../backend && npm install
       echo "Build phase completed"
@@ -21,4 +23,6 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: NODE_ENV
-        value: production 
+        value: production
+      - key: PATH
+        value: /opt/render/project/src/frontend/node_modules/.bin:$PATH 
