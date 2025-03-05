@@ -21,11 +21,16 @@ if (process.env.NODE_ENV === 'production') {
     // Go to frontend directory
     process.chdir(path.join(__dirname, '..', 'frontend'));
     console.log('Frontend directory:', process.cwd());
-    console.log('Frontend node_modules contents:', fs.readdirSync('node_modules'));
+    
+    // Install frontend dependencies if needed
+    if (!fs.existsSync('node_modules')) {
+      console.log('Installing frontend dependencies...');
+      execSync('npm install', { stdio: 'inherit' });
+    }
     
     // Build frontend
     console.log('Building frontend...');
-    execSync('node node_modules/vite/bin/vite.js build', { stdio: 'inherit' });
+    execSync('npm run build', { stdio: 'inherit' });
     
     // Go back to backend directory
     process.chdir(path.join(__dirname));
