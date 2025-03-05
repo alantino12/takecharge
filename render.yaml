@@ -2,22 +2,7 @@ services:
   - type: web
     name: takecharge-backend
     env: node
-    buildCommand: |
-      # Install frontend dependencies and build
-      cd frontend
-      npm install
-      npm run build
-      
-      # Install backend dependencies
-      cd ../backend
-      npm install
-      
-      # Create public directory and copy frontend build
-      mkdir -p public
-      cp -r ../frontend/dist/* public/
-      
-      # List contents to verify
-      ls -la public/
+    buildCommand: ./build.sh
     startCommand: cd backend && node server.js
     envVars:
       - key: MONGODB_URI
