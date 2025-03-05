@@ -132,7 +132,14 @@ app.delete('/api/posts/:id', authenticateAdmin, async (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   const publicPath = path.join(__dirname, 'public');
   console.log('Serving static files from:', publicPath);
-  console.log('Directory exists:', require('fs').existsSync(publicPath));
+  
+  // Check if public directory exists
+  if (!require('fs').existsSync(publicPath)) {
+    console.error('Public directory does not exist:', publicPath);
+    console.error('Please ensure the build process completed successfully');
+    process.exit(1);
+  }
+  
   console.log('Directory contents:', require('fs').readdirSync(publicPath));
   
   // Serve static files from the public directory
@@ -141,8 +148,10 @@ if (process.env.NODE_ENV === 'production') {
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
-    console.log('Serving index.html from:', indexPath);
-    console.log('File exists:', require('fs').existsSync(indexPath));
+    if (!require('fs').existsSync(indexPath)) {
+      console.error('index.html not found at:', indexPath);
+      return res.status(404).send('Frontend build files not found');
+    }
     res.sendFile(indexPath);
   });
 }
