@@ -4,10 +4,32 @@ services:
     env: node
     nodeVersion: 18.17.0
     buildCommand: |
-      cd frontend && npm install && npm run build
-      cd ../backend && npm install
-      mkdir -p backend/public
-      cp -r frontend/dist/* backend/public/
+      echo "Starting build process..."
+      echo "Current directory: $(pwd)"
+      echo "Directory contents:"
+      ls -la
+      
+      echo "Building frontend..."
+      cd frontend
+      echo "Frontend directory contents:"
+      ls -la
+      npm install
+      npm run build
+      echo "Frontend build completed. Checking dist directory:"
+      ls -la dist
+      
+      echo "Setting up backend..."
+      cd ../backend
+      echo "Backend directory contents:"
+      ls -la
+      npm install
+      
+      echo "Creating public directory and copying files..."
+      rm -rf public
+      mkdir -p public
+      cp -r ../frontend/dist/* public/
+      echo "Public directory contents after copy:"
+      ls -la public
     startCommand: cd backend && node server.js
     envVars:
       - key: MONGODB_URI
