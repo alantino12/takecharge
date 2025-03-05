@@ -130,12 +130,12 @@ app.delete('/api/posts/:id', authenticateAdmin, async (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve static files from the frontend build directory
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  // Serve static files from the public directory
+  app.use(express.static(path.join(__dirname, 'public')));
 
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+    res.sendFile(path.join(__dirname, 'public/index.html'));
   });
 }
 
