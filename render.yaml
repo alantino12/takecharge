@@ -2,7 +2,7 @@ services:
   - type: web
     name: takecharge-backend
     env: node
-    buildCommand: chmod +x build.sh && ./build.sh
+    buildCommand: cd backend && npm install
     startCommand: cd backend && node server.js
     envVars:
       - key: MONGODB_URI

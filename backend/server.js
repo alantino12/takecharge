@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
 require('dotenv').config();
 
 const app = express();
@@ -9,6 +11,52 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Build process for production
+if (process.env.NODE_ENV === 'production') {
+  try {
+    console.log('Starting build process...');
+    console.log('Current directory:', process.cwd());
+    
+    // Go to frontend directory
+    process.chdir(path.join(__dirname, '..', 'frontend'));
+    console.log('Frontend directory:', process.cwd());
+    
+    // Install dependencies and build
+    console.log('Installing frontend dependencies...');
+    execSync('npm install', { stdio: 'inherit' });
+    console.log('Building frontend...');
+    execSync('npm run build', { stdio: 'inherit' });
+    
+    // Go back to backend directory
+    process.chdir(path.join(__dirname));
+    console.log('Backend directory:', process.cwd());
+    
+    // Create public directory
+    const publicPath = path.join(__dirname, 'public');
+    if (!fs.existsSync(publicPath)) {
+      console.log('Creating public directory...');
+      fs.mkdirSync(publicPath, { recursive: true });
+    }
+    
+    // Copy frontend build files
+    console.log('Copying frontend build files...');
+    const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+    const files = fs.readdirSync(frontendDist);
+    files.forEach(file => {
+      fs.copyFileSync(
+        path.join(frontendDist, file),
+        path.join(publicPath, file)
+      );
+    });
+    
+    console.log('Build completed successfully');
+    console.log('Public directory contents:', fs.readdirSync(publicPath));
+  } catch (error) {
+    console.error('Build process failed:', error);
+    process.exit(1);
+  }
+}
 
 // MongoDB Connection with detailed error handling
 const connectDB = async () => {
