@@ -130,12 +130,20 @@ app.delete('/api/posts/:id', authenticateAdmin, async (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, 'public');
+  console.log('Serving static files from:', publicPath);
+  console.log('Directory exists:', require('fs').existsSync(publicPath));
+  console.log('Directory contents:', require('fs').readdirSync(publicPath));
+  
   // Serve static files from the public directory
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.static(publicPath));
 
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    const indexPath = path.join(publicPath, 'index.html');
+    console.log('Serving index.html from:', indexPath);
+    console.log('File exists:', require('fs').existsSync(indexPath));
+    res.sendFile(indexPath);
   });
 }
 
