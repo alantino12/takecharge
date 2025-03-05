@@ -3,7 +3,13 @@ services:
     name: takecharge-backend
     env: node
     nodeVersion: 18.17.0
-    buildCommand: cd backend && npm install
+    buildCommand: |
+      echo "Installing root dependencies..."
+      npm install
+      echo "Installing frontend dependencies..."
+      cd frontend && npm install
+      echo "Installing backend dependencies..."
+      cd ../backend && npm install
     startCommand: cd backend && node server.js
     envVars:
       - key: MONGODB_URI

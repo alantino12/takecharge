@@ -21,12 +21,11 @@ if (process.env.NODE_ENV === 'production') {
     // Go to frontend directory
     process.chdir(path.join(__dirname, '..', 'frontend'));
     console.log('Frontend directory:', process.cwd());
+    console.log('Frontend node_modules contents:', fs.readdirSync('node_modules'));
     
-    // Install dependencies and build
-    console.log('Installing frontend dependencies...');
-    execSync('npm install', { stdio: 'inherit' });
+    // Build frontend
     console.log('Building frontend...');
-    execSync('npx vite build', { stdio: 'inherit' });
+    execSync('node node_modules/vite/bin/vite.js build', { stdio: 'inherit' });
     
     // Go back to backend directory
     process.chdir(path.join(__dirname));
@@ -42,6 +41,9 @@ if (process.env.NODE_ENV === 'production') {
     // Copy frontend build files
     console.log('Copying frontend build files...');
     const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+    if (!fs.existsSync(frontendDist)) {
+      throw new Error('Frontend build directory not found');
+    }
     const files = fs.readdirSync(frontendDist);
     files.forEach(file => {
       fs.copyFileSync(
@@ -54,6 +56,11 @@ if (process.env.NODE_ENV === 'production') {
     console.log('Public directory contents:', fs.readdirSync(publicPath));
   } catch (error) {
     console.error('Build process failed:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
 }
