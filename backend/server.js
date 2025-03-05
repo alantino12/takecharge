@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === 'production') {
     console.log('Installing frontend dependencies...');
     execSync('npm install', { stdio: 'inherit' });
     console.log('Building frontend...');
-    execSync('npm run build', { stdio: 'inherit' });
+    execSync('npx vite build', { stdio: 'inherit' });
     
     // Go back to backend directory
     process.chdir(path.join(__dirname));
