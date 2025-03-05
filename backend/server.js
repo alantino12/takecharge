@@ -10,10 +10,55 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// MongoDB Connection with detailed error handling
+const connectDB = async () => {
+  try {
+    console.log('Attempting to connect to MongoDB...');
+    console.log('MongoDB URI:', process.env.MONGODB_URI);
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // Increased timeout to 30 seconds
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
+      retryWrites: true,
+      retryReads: true,
+      maxPoolSize: 10
+    });
+    
+    console.log('Successfully connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code
+    });
+    
+    // Retry connection after 5 seconds
+    setTimeout(() => {
+      console.log('Retrying MongoDB connection...');
+      connectDB();
+    }, 5000);
+  }
+};
+
+// Connect to MongoDB
+connectDB();
+
+// Add mongoose connection event listeners
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected');
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connected');
+});
 
 // Blog Post Schema
 const blogPostSchema = new mongoose.Schema({
