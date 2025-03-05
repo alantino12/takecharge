@@ -11,8 +11,12 @@ services:
       cd frontend && npm install
       echo "Building frontend..."
       npm run build
+      echo "Creating backend public directory..."
+      cd ../backend && mkdir -p public
+      echo "Copying frontend build files..."
+      cp -r ../frontend/dist/* public/
       echo "Installing backend dependencies..."
-      cd ../backend && npm install
+      npm install
       echo "Build phase completed"
     startCommand: cd backend && node server.js
     envVars:
