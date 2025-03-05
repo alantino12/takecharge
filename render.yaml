@@ -3,7 +3,17 @@ services:
     name: takecharge-backend
     env: node
     nodeVersion: 18.17.0
-    buildCommand: chmod +x build.sh && ./build.sh
+    buildCommand: |
+      echo "Starting build process..."
+      echo "Current directory: $(pwd)"
+      echo "Directory contents:"
+      ls -la
+      chmod +x build.sh
+      echo "Running build script..."
+      ./build.sh
+      echo "Build script completed"
+      echo "Checking backend/public directory:"
+      ls -la backend/public || echo "backend/public directory not found"
     startCommand: cd backend && node server.js
     envVars:
       - key: MONGODB_URI
