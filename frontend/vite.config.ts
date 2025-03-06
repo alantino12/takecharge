@@ -22,4 +22,13 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:1000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
 });
