@@ -12,16 +12,24 @@ console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
 // CORS configuration
 app.use(cors({
-  origin: true, // Allow all origins
+  origin: ['null', 'file://', 'http://localhost:8080', 'http://127.0.0.1:8080'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'password'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'password', 'Accept'],
   exposedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  credentials: false, // Changed to false since we're allowing null origin
   maxAge: 86400 // 24 hours
 }));
 
 // Handle preflight requests
 app.options('*', cors());
+
+// Add CORS headers manually for additional security
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, password, Accept');
+  next();
+});
 
 app.use(express.json());
 
