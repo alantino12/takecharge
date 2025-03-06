@@ -5,21 +5,25 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS configuration
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'password'],
-  credentials: true
-}));
-
-app.use(express.json());
-
 // Debug information
 console.log('Server starting...');
 console.log('Environment:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
-console.log('CORS origin:', corsOptions.origin);
+
+// CORS configuration
+app.use(cors({
+  origin: true, // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'password'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 hours
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
+app.use(express.json());
 
 // MongoDB Connection Cache
 let cachedDb = null;
