@@ -6,17 +6,13 @@ require('dotenv').config();
 const app = express();
 
 // CORS configuration
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://frontend-elsdkh7f3-alantino12s-projects.vercel.app']
-    : 'http://localhost:5173',
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'password'],
   credentials: true
-};
+}));
 
-// Middleware
-app.use(cors(corsOptions));
 app.use(express.json());
 
 // Debug information

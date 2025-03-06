@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Blog Post Creation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 8px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        #response { margin-top: 20px; padding: 10px; background: #f8f9fa; white-space: pre-wrap; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Create Blog Post</h1>
+    <div class="form-group">
+        <label>Admin Password:</label>
+        <input type="password" id="adminPassword">
+    </div>
+    <div class="form-group">
+        <label>Title:</label>
+        <input type="text" id="title" value="Welcome to TakeCharge">
+    </div>
+    <div class="form-group">
+        <label>Content:</label>
+        <textarea id="content" rows="4">This is our first blog post! TakeCharge is a platform dedicated to helping you take control of your financial future.</textarea>
+    </div>
+    <div class="form-group">
+        <label>Image URL:</label>
+        <input type="text" id="imageUrl" value="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e">
+    </div>
+    <div class="form-group">
+        <label>Excerpt:</label>
+        <textarea id="excerpt" rows="2">Welcome to TakeCharge, your guide to financial independence.</textarea>
+    </div>
+    <button onclick="createPost()">Create Post</button>
+    <div id="response"></div>
+
+    <script>
+        const API_URL = 'https://backend-hjvxvkb8k-alantino12s-projects.vercel.app';
+
+        // Test connection to API
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                console.log('API Health Check:', data);
+                document.getElementById('response').innerHTML = `
+                    <h3 class="success">API Connection Test:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('API Connection Error:', error);
+                document.getElementById('response').innerHTML = `
+                    <h3 class="error">API Connection Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+
+        async function createPost() {
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = 'Sending request...';
+
+            const data = {
+                title: document.getElementById('title').value,
+                content: document.getElementById('content').value,
+                imageUrl: document.getElementById('imageUrl').value,
+                excerpt: document.getElementById('excerpt').value
+            };
+
+            try {
+                console.log('Sending request to:', `${API_URL}/api/posts`);
+                console.log('Request data:', data);
+
+                const response = await fetch(`${API_URL}/api/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'password': document.getElementById('adminPassword').value,
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify(data)
+                });
+
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response data:', result);
+
+                responseDiv.innerHTML = `
+                    <h3 class="${response.ok ? 'success' : 'error'}">Response:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                responseDiv.innerHTML = `
+                    <h3 class="error">Error:</h3>
+                    <pre>${error.message}</pre>
+                    <p>Check the browser console for more details.</p>
+                `;
+            }
+        }
+
+        // Test connection when page loads
+        testConnection();
+    </script>
+</body>
+</html> 
