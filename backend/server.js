@@ -1,61 +1,53 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://frontend-ipvy9oqbl-alantino12s-projects.vercel.app']
+    : 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'password'],
+  credentials: true
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Debug information
 console.log('Server starting...');
-console.log('Current working directory:', process.cwd());
-console.log('__dirname:', __dirname);
-console.log('Directory contents:', fs.readdirSync(__dirname));
+console.log('Environment:', process.env.NODE_ENV);
+console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
+console.log('CORS origin:', corsOptions.origin);
 
 // MongoDB Connection with detailed error handling
 const connectDB = async () => {
+  if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI is not defined');
+    return false;
+  }
+
   try {
     console.log('Attempting to connect to MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000,
-      retryWrites: true,
-      retryReads: true,
-      maxPoolSize: 10
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
     });
     console.log('Successfully connected to MongoDB');
+    return true;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    setTimeout(() => {
-      console.log('Retrying MongoDB connection...');
-      connectDB();
-    }, 5000);
+    console.error('MongoDB connection error:', error.message);
+    return false;
   }
 };
-
-// Connect to MongoDB
-connectDB();
-
-// Add mongoose connection event listeners
-mongoose.connection.on('error', err => {
-  console.error('MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
-});
-
-mongoose.connection.on('connected', () => {
-  console.log('MongoDB connected');
-});
 
 // Blog Post Schema
 const blogPostSchema = new mongoose.Schema({
@@ -72,8 +64,31 @@ const blogPostSchema = new mongoose.Schema({
 
 const BlogPost = mongoose.model('BlogPost', blogPostSchema);
 
-// API Routes
-app.get('/api/posts', async (req, res) => {
+// Health check endpoint that doesn't require DB connection
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    environment: process.env.NODE_ENV,
+    mongoDBUri: !!process.env.MONGODB_URI
+  });
+});
+
+// Middleware to ensure DB connection
+const ensureDBConnection = async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    const connected = await connectDB();
+    if (!connected) {
+      return res.status(500).json({ 
+        error: 'Database connection failed',
+        details: 'Could not establish connection to MongoDB'
+      });
+    }
+  }
+  next();
+};
+
+// API Routes - all routes that need DB now use the middleware
+app.get('/api/posts', ensureDBConnection, async (req, res) => {
   try {
     const posts = await BlogPost.find().sort({ createdAt: -1 });
     res.json(posts);
@@ -93,7 +108,7 @@ const authenticateAdmin = (req, res, next) => {
 };
 
 // Protected admin routes
-app.post('/api/posts', authenticateAdmin, async (req, res) => {
+app.post('/api/posts', [ensureDBConnection, authenticateAdmin], async (req, res) => {
   try {
     const post = new BlogPost(req.body);
     const newPost = await post.save();
@@ -103,7 +118,7 @@ app.post('/api/posts', authenticateAdmin, async (req, res) => {
   }
 });
 
-app.put('/api/posts/:id', authenticateAdmin, async (req, res) => {
+app.put('/api/posts/:id', [ensureDBConnection, authenticateAdmin], async (req, res) => {
   try {
     const post = await BlogPost.findByIdAndUpdate(
       req.params.id,
@@ -116,7 +131,7 @@ app.put('/api/posts/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-app.delete('/api/posts/:id', authenticateAdmin, async (req, res) => {
+app.delete('/api/posts/:id', [ensureDBConnection, authenticateAdmin], async (req, res) => {
   try {
     await BlogPost.findByIdAndDelete(req.params.id);
     res.json({ message: 'Post deleted successfully' });
@@ -125,40 +140,31 @@ app.delete('/api/posts/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  const publicPath = path.join(__dirname, 'public');
-  console.log('Public directory path:', publicPath);
-  console.log('Public directory exists:', fs.existsSync(publicPath));
-  
-  // Create public directory if it doesn't exist
-  if (!fs.existsSync(publicPath)) {
-    console.log('Creating public directory...');
-    fs.mkdirSync(publicPath, { recursive: true });
-  }
+// Root route for basic info
+app.get('/', (req, res) => {
+  res.json({
+    message: 'TakeCharge API is running',
+    environment: process.env.NODE_ENV,
+    mongoDBConnected: mongoose.connection.readyState === 1
+  });
+});
 
-  // Log public directory contents
-  console.log('Public directory contents:', fs.readdirSync(publicPath));
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message
+  });
+});
 
-  // Serve static files from the public directory
-  app.use(express.static(publicPath));
-
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res) => {
-    const indexPath = path.join(publicPath, 'index.html');
-    console.log('Looking for index.html at:', indexPath);
-    console.log('index.html exists:', fs.existsSync(indexPath));
-    
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      console.log('Available files in public directory:', fs.readdirSync(publicPath));
-      res.status(404).send('Frontend files not found. Please ensure the build process completed successfully.');
-    }
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
   });
 }
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-}); 
+// For Vercel
+module.exports = app; 
